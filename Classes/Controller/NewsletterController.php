@@ -9,6 +9,8 @@ use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Mail\MailMessage;
+
 class NewsletterController extends ActionController
 {
     /**
@@ -65,6 +67,8 @@ class NewsletterController extends ActionController
                     // Benutzer als "gelöscht" markieren (deleted = 1)
                     $this->markUserAsDeleted($user);
                 }
+                // Benachrichtigung an Admin senden
+                $this->sendUnsubscribeNotification($user);
 
                 $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_success', 'feuser_newsletter_subscription'));
                 return $this->redirect('showUnsubscribe');
@@ -176,5 +180,25 @@ class NewsletterController extends ActionController
         }
 
         return $this->redirect('showSubscribe');
+    }
+
+    protected function sendUnsubscribeNotification(User $user): void
+    {
+        $mail = GeneralUtility::makeInstance(MailMessage::class);
+
+        $mail->from(new \Symfony\Component\Mime\Address('noreply@schubertlied.de', 'Newsletter-System'));
+        $mail->to(new \Symfony\Component\Mime\Address('mail@schubertlied.de', 'Newsletter Admin'));
+        $mail->subject('Newsletter-Abmeldung');
+
+        $body = sprintf(
+            "Ein Benutzer hat sich vom Newsletter abgemeldet:\n\nName: %s %s\nE-Mail: %s\nUsergroup: %s",
+            $user->getFirstName(),
+            $user->getLastName(),
+            $user->getEmail(),
+            $user->getUsergroup()->count() > 0 ? 'Zugeordnet' : 'Keine'
+        );
+
+        $mail->text($body);
+        $mail->send();
     }
 }
