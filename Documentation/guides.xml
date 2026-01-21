@@ -6,7 +6,7 @@
 >
   <extension class="\T3Docs\Typo3DocsTheme\DependencyInjection\Typo3DocsThemeExtension"
              project-home="https://github.com/peterschoene/feuser-newsletter-subscription"
-             project-contact="dev@peterschoene.de"
+             project-contact="mail@ps-devstudio.de"
              project-repository="https://github.com/peterschoene/feuser-newsletter-subscription"
              project-issues="https://github.com/peterschoene/feuser-newsletter-subscription/issues"
              project-discussions="https://github.com/peterschoene/feuser-newsletter-subscription/discussions"
