@@ -2,14 +2,15 @@
 
 namespace Pschoene\FeuserNewsletterSubscription\Controller;
 
-use Pschoene\FeuserNewsletterSubscription\Domain\Repository\UserRepository;
 use Pschoene\FeuserNewsletterSubscription\Domain\Model\User;
+use Pschoene\FeuserNewsletterSubscription\Domain\Repository\UserRepository;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use Psr\Http\Message\ResponseInterface;
-use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Mail\MailMessage;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 class NewsletterController extends ActionController
 {
@@ -18,7 +19,11 @@ class NewsletterController extends ActionController
      */
     protected $userRepository;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(
+        UserRepository $userRepository,
+        private readonly PersistenceManager $persistenceManager,
+        private readonly ConnectionPool $connectionPool,
+    )
     {
         $this->userRepository = $userRepository;
     }
@@ -93,19 +98,17 @@ class NewsletterController extends ActionController
      */
     protected function markUserAsDeleted(User $user): void
     {
-        $dataHandler = GeneralUtility::makeInstance(\TYPO3\CMS\Core\DataHandling\DataHandler::class);
-
-        $cmd = [
-            'fe_users' => [
-                $user->getUid() => [
-                    'delete' => 1, // Dies setzt das Feld "deleted" auf 1
-                ],
-            ],
-        ];
-
-        // Datenverarbeitung ohne das erste Argument
-        $dataHandler->start([], $cmd);
-        $dataHandler->process_cmdmap();
+        $queryBuilder = $this->connectionPool->getQueryBuilderForTable(User::TABLE_NAME);
+        $queryBuilder
+            ->update(User::TABLE_NAME)
+            ->where(
+                $queryBuilder->expr()->eq(
+                    'uid',
+                    $queryBuilder->createNamedParameter($user->getUid(), \PDO::PARAM_INT)
+                )
+            )
+            ->set('deleted', 1)
+            ->executeStatement();
     }
 
     /**
@@ -141,6 +144,7 @@ class NewsletterController extends ActionController
                 // Anmeldung für den Newsletter
                 $user->setMailActive(1);
                 $this->userRepository->update($user);
+                $this->persistenceManager->persistAll();
                 // Fallback-Text, falls die Übersetzung nicht gefunden wird
                 $message = LocalizationUtility::translate('subscribe_success', 'feuser_newsletter_subscription') 
                     ?? 'You have successfully subscribed to the newsletter.';
@@ -154,23 +158,17 @@ class NewsletterController extends ActionController
             }
         } else {
             // Neuer Benutzer erstellen, wenn E-Mail nicht existiert
-            $data = [
-                'fe_users' => [
-                    'NEW' => [
-                        'pid' => $storagePid, // Verwende die dynamische storagePid
-                        'first_name' => $firstName,
-                        'last_name' => $lastName,
-                        'email' => $email,
-                        'mail_active' => 1,
-                        'mail_html' => $mailHtml,
-                    ],
-                ],
-            ];
+            $newUser = GeneralUtility::makeInstance(User::class);
+            $newUser->setPid((int)$storagePid);
+            $newUser->setUsername($email);
+            $newUser->setFirstName($firstName);
+            $newUser->setLastName($lastName);
+            $newUser->setEmail($email);
+            $newUser->setMailActive(1);
+            $newUser->setMailHtml((bool)$mailHtml);
 
-            /** @var DataHandler $dataHandler */
-            $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-            $dataHandler->start($data, []);
-            $dataHandler->process_datamap();
+            $this->userRepository->add($newUser);
+            $this->persistenceManager->persistAll();
 
             $message = LocalizationUtility::translate('subscribe_success_new_user', 'feuser_newsletter_subscription') 
                 ?? 'Thank you for subscribing! A new account has been created for you.';
