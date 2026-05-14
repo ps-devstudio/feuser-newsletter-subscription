@@ -8,6 +8,7 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Mail\MailMessage;
+use TYPO3\CMS\Core\Messaging\AbstractMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -55,7 +56,16 @@ class NewsletterController extends ActionController
      */
     public function unsubscribeAction(): ResponseInterface
     {
-        $email = $this->request->getArgument('email');
+        if ($this->isSpamSubmission()) {
+            $this->addFlashMessage('Ungültige Einsendung erkannt.', '', AbstractMessage::ERROR);
+            return $this->redirect('showUnsubscribe');
+        }
+
+        $email = $this->getNormalizedEmailArgument();
+        if ($email === null) {
+            $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_error', 'feuser_newsletter_subscription'), '', AbstractMessage::ERROR);
+            return $this->redirect('showUnsubscribe');
+        }
 
         // Benutzer anhand der E-Mail-Adresse finden
         $user = $this->userRepository->findOneByEmail($email);
@@ -83,7 +93,7 @@ class NewsletterController extends ActionController
             }
         } else {
             // Benutzer wurde nicht gefunden
-            $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_error', 'feuser_newsletter_subscription'), '', \TYPO3\CMS\Core\Messaging\AbstractMessage::ERROR);
+            $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_error', 'feuser_newsletter_subscription'), '', AbstractMessage::ERROR);
             return $this->redirect('showUnsubscribe');
         }
 
@@ -118,15 +128,14 @@ class NewsletterController extends ActionController
      */
     public function subscribeAction(): ResponseInterface
     {
-        $email = $this->request->getArgument('email');
-        $firstName = $this->request->getArgument('first_name');
-        $lastName = $this->request->getArgument('last_name');
+        $email = $this->getNormalizedEmailArgument();
+        $firstName = $this->getTrimmedArgument('first_name', 80);
+        $lastName = $this->getTrimmedArgument('last_name', 80);
         $mailHtml = $this->request->hasArgument('mail_html') ? 1 : 0;
-        $honeypot = $this->request->getArgument('schwammerl');
 
-        if (!empty($honeypot)) {
+        if ($this->isSpamSubmission() || $email === null || $firstName === '' || $lastName === '') {
             // Spam erkannt
-            $this->addFlashMessage('Ungültige Einsendung erkannt.', '', \TYPO3\CMS\Core\Messaging\AbstractMessage::ERROR);
+            $this->addFlashMessage('Ungültige Einsendung erkannt.', '', AbstractMessage::ERROR);
             return $this->redirect('showSubscribe');
         }
         
@@ -193,10 +202,50 @@ class NewsletterController extends ActionController
             $user->getFirstName(),
             $user->getLastName(),
             $user->getEmail(),
-            $user->getUsergroup()->count() > 0 ? 'Zugeordnet' : 'Keine'
+            $this->formatUsergroupTitles($user)
         );
 
         $mail->text($body);
         $mail->send();
+    }
+
+    protected function formatUsergroupTitles(User $user): string
+    {
+        $titles = [];
+        foreach ($user->getUsergroup() as $usergroup) {
+            $title = trim($usergroup->getTitle());
+            $titles[] = $title !== '' ? $title : '#' . $usergroup->getUid();
+        }
+
+        return $titles !== [] ? implode(', ', $titles) : 'Keine';
+    }
+
+    protected function getNormalizedEmailArgument(): ?string
+    {
+        if (!$this->request->hasArgument('email')) {
+            return null;
+        }
+
+        $email = mb_strtolower(trim((string)$this->request->getArgument('email')));
+        if ($email === '' || strlen($email) > 254 || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return null;
+        }
+
+        return $email;
+    }
+
+    protected function getTrimmedArgument(string $name, int $maxLength): string
+    {
+        if (!$this->request->hasArgument($name)) {
+            return '';
+        }
+
+        return mb_substr(trim((string)$this->request->getArgument($name)), 0, $maxLength);
+    }
+
+    protected function isSpamSubmission(): bool
+    {
+        return $this->request->hasArgument('schwammerl')
+            && trim((string)$this->request->getArgument('schwammerl')) !== '';
     }
 }
