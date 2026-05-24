@@ -73,17 +73,21 @@ class NewsletterController extends ActionController
         if ($user !== null) {
             // Prüfen, ob der Benutzer für den Newsletter angemeldet ist (mail_active === 1)
             if ($user->getMailActive() === 1) {
+                $hasUsergroup = count($user->getUsergroup()) > 0;
                 // Abmelden vom Newsletter
                 $user->setMailActive(0);
                 $this->userRepository->update($user);
 
                 // Überprüfen, ob usergroup NULL ist (leerer oder nicht zugewiesener Wert)
-                if (count($user->getUsergroup()) === 0) {
+                if (!$hasUsergroup) {
                     // Benutzer als "gelöscht" markieren (deleted = 1)
                     $this->markUserAsDeleted($user);
                 }
-                // Benachrichtigung an Admin senden
-                $this->sendUnsubscribeNotification($user);
+
+                if ($hasUsergroup) {
+                    // Benachrichtigung an Admin nur für echte Benutzerkonten senden.
+                    $this->sendUnsubscribeNotification($user);
+                }
 
                 $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_success', 'feuser_newsletter_subscription'));
                 return $this->redirect('showUnsubscribe');
@@ -245,7 +249,7 @@ class NewsletterController extends ActionController
 
     protected function isSpamSubmission(): bool
     {
-        return $this->request->hasArgument('schwammerl')
-            && trim((string)$this->request->getArgument('schwammerl')) !== '';
+        return !$this->request->hasArgument('schwammerl')
+            || trim((string)$this->request->getArgument('schwammerl')) !== '';
     }
 }
