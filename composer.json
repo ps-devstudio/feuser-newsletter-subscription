@@ -15,8 +15,8 @@
         "GPL-2.0-or-later"
     ],
     "require": {
-        "typo3/cms-core": "^12.4",
-        "mediaessenz/mail": "^2 || ^3"
+        "typo3/cms-core": "^12.4 || ^13.4",
+        "mediaessenz/mail": "^3 || ^4"
     },
     "autoload": {
         "psr-4": {
