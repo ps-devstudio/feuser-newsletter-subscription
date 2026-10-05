@@ -8,10 +8,11 @@ use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use Psr\Http\Message\ResponseInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Mail\MailMessage;
-use TYPO3\CMS\Core\Messaging\AbstractMessage;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
+use Doctrine\DBAL\ParameterType;
 
 class NewsletterController extends ActionController
 {
@@ -57,13 +58,13 @@ class NewsletterController extends ActionController
     public function unsubscribeAction(): ResponseInterface
     {
         if ($this->isSpamSubmission()) {
-            $this->addFlashMessage('Ungültige Einsendung erkannt.', '', AbstractMessage::ERROR);
+            $this->addFlashMessage('Ungültige Einsendung erkannt.', '', ContextualFeedbackSeverity::ERROR);
             return $this->redirect('showUnsubscribe');
         }
 
         $email = $this->getNormalizedEmailArgument();
         if ($email === null) {
-            $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_error', 'feuser_newsletter_subscription'), '', AbstractMessage::ERROR);
+            $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_error', 'feuser_newsletter_subscription'), '', ContextualFeedbackSeverity::ERROR);
             return $this->redirect('showUnsubscribe');
         }
 
@@ -97,7 +98,7 @@ class NewsletterController extends ActionController
             }
         } else {
             // Benutzer wurde nicht gefunden
-            $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_error', 'feuser_newsletter_subscription'), '', AbstractMessage::ERROR);
+            $this->addFlashMessage(LocalizationUtility::translate('unsubscribe_error', 'feuser_newsletter_subscription'), '', ContextualFeedbackSeverity::ERROR);
             return $this->redirect('showUnsubscribe');
         }
 
@@ -113,12 +114,16 @@ class NewsletterController extends ActionController
     protected function markUserAsDeleted(User $user): void
     {
         $queryBuilder = $this->connectionPool->getQueryBuilderForTable(User::TABLE_NAME);
+
         $queryBuilder
             ->update(User::TABLE_NAME)
             ->where(
                 $queryBuilder->expr()->eq(
                     'uid',
-                    $queryBuilder->createNamedParameter($user->getUid(), \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter(
+                        $user->getUid(),
+                        ParameterType::INTEGER
+                    )
                 )
             )
             ->set('deleted', 1)
@@ -139,7 +144,7 @@ class NewsletterController extends ActionController
 
         if ($this->isSpamSubmission() || $email === null || $firstName === '' || $lastName === '') {
             // Spam erkannt
-            $this->addFlashMessage('Ungültige Einsendung erkannt.', '', AbstractMessage::ERROR);
+            $this->addFlashMessage('Ungültige Einsendung erkannt.', '', ContextualFeedbackSeverity::ERROR);
             return $this->redirect('showSubscribe');
         }
         
