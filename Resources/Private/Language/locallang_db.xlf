@@ -7,16 +7,16 @@
 				<source>Newsletter Subscription New</source>
 			</trans-unit>
 			<trans-unit id="subscribe_plugin_description" resname="subscribe_plugin_description">
-				<source>Subscribe to tx_mail Newsletter</source>
+				<source>Formular zum Abonnieren des Newsletters</source>
 			</trans-unit>
 			<trans-unit id="subscribe_plugin_title" resname="subscribe_plugin_title">
-				<source>Subscribe</source>
+				<source>Newsletter abonnieren</source>
 			</trans-unit>
 			<trans-unit id="unsubscribe_plugin_description" resname="unsubscribe_plugin_description">
-				<source>Unsubscribe to tx_mail Newsletter</source>
+				<source>Formular zum Abbestellen des Newsletters</source>
 			</trans-unit>
 			<trans-unit id="unsubscribe_plugin_title" resname="unsubscribe_plugin_title">
-				<source>Unsubscribe</source>
+				<source>Newsletter abbestellen</source>
 			</trans-unit>
 			<trans-unit id="subscribe_success">
 				<source>You have successfully subscribed to the newsletter.</source>

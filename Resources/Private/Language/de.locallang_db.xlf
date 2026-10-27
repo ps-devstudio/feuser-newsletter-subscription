@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+    <file source-language="en" target-language="de" datatype="plaintext" original="EXT:feuser_newsletter_subscription/Resources/Private/Language/locallang_db.xlf" product-name="feuser_newsletter_subscription">
+        <body>
+            <trans-unit id="subscribe_plugin_title" resname="subscribe_plugin_title"><source>Newsletter abonnieren</source><target>Newsletter abonnieren</target></trans-unit>
+            <trans-unit id="subscribe_plugin_description" resname="subscribe_plugin_description"><source>Formular zum Abonnieren des Newsletters</source><target>Formular zum Abonnieren des Newsletters</target></trans-unit>
+            <trans-unit id="unsubscribe_plugin_title" resname="unsubscribe_plugin_title"><source>Newsletter abbestellen</source><target>Newsletter abbestellen</target></trans-unit>
+            <trans-unit id="unsubscribe_plugin_description" resname="unsubscribe_plugin_description"><source>Formular zum Abbestellen des Newsletters</source><target>Formular zum Abbestellen des Newsletters</target></trans-unit>
+        </body>
+    </file>
+</xliff>

@@ -10,7 +10,10 @@ $pluginTitleSubscribe = 'LLL:EXT:feuser_newsletter_subscription/Resources/Privat
 ExtensionUtility::registerPlugin(
     $extensionKey,
     $pluginNameSubscribe,
-    $pluginTitleSubscribe
+    $pluginTitleSubscribe,
+    'subscribe_icon',
+    'myplugins',
+    'LLL:EXT:feuser_newsletter_subscription/Resources/Private/Language/locallang_db.xlf:subscribe_plugin_description'
 );
 
 // Registrierung des Unsubscribe-Plugins
@@ -19,5 +22,8 @@ $pluginTitleUnsubscribe = 'LLL:EXT:feuser_newsletter_subscription/Resources/Priv
 ExtensionUtility::registerPlugin(
     $extensionKey,
     $pluginNameUnsubscribe,
-    $pluginTitleUnsubscribe
+    $pluginTitleUnsubscribe,
+    'unsubscribe_icon',
+    'myplugins',
+    'LLL:EXT:feuser_newsletter_subscription/Resources/Private/Language/locallang_db.xlf:unsubscribe_plugin_description'
 );
