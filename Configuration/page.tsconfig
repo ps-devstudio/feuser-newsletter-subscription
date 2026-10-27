@@ -1,5 +1,6 @@
 mod.wizards.newContentElement.wizardItems {
-  plugins {
+  myplugins {
+    header = Meine Plugins
     elements {
       feusernewslettersubscription_subscribe {
         iconIdentifier = subscribe_icon
@@ -23,4 +24,5 @@ mod.wizards.newContentElement.wizardItems {
     }
     show := addToList(feusernewslettersubscription_subscribe, feusernewslettersubscription_unsubscribe)
   }
+  plugins.show := removeFromList(feusernewslettersubscription_subscribe, feusernewslettersubscription_unsubscribe)
 }
