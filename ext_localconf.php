@@ -15,7 +15,7 @@ ExtensionUtility::configurePlugin(
     [
         NewsletterController::class => 'subscribe',
     ],
-    ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT
+    ExtensionUtility::PLUGIN_TYPE_PLUGIN
 );
 
 ExtensionUtility::configurePlugin(
@@ -28,5 +28,5 @@ ExtensionUtility::configurePlugin(
     [
         NewsletterController::class => 'unsubscribe',
     ],
-    ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT
+    ExtensionUtility::PLUGIN_TYPE_PLUGIN
 );

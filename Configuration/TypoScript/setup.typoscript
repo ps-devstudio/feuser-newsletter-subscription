@@ -20,3 +20,18 @@ plugin.tx_feusernewslettersubscription {
         storagePid = {$plugin.tx_feusernewslettersubscription.persistence.storagePid}
     }
 }
+
+# Compatibility for existing content elements using the former CType.
+tt_content.list.20.feuser_newsletter_subscription_subscribe = EXTBASEPLUGIN
+tt_content.list.20.feuser_newsletter_subscription_subscribe {
+    extensionName = FeuserNewsletterSubscription
+    pluginName = Subscribe
+}
+tt_content.feuser_newsletter_subscription_subscribe < tt_content.list.20.feuser_newsletter_subscription_subscribe
+
+tt_content.list.20.feuser_newsletter_subscription_unsubscribe = EXTBASEPLUGIN
+tt_content.list.20.feuser_newsletter_subscription_unsubscribe {
+    extensionName = FeuserNewsletterSubscription
+    pluginName = Unsubscribe
+}
+tt_content.feuser_newsletter_subscription_unsubscribe < tt_content.list.20.feuser_newsletter_subscription_unsubscribe
